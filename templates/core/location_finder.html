@@ -1,0 +1,19 @@
+{% extends 'core/base.html' %}
+{% block title %}Medication location finder{% endblock %}
+{% block content %}
+<section class="panel">
+ <h2>Find the way from the counter</h2>
+ <p class="subtitle">Search for a medication, then select its batch to draw a walking route through the pharmacy.</p>
+ <form method="get" class="search"><input name="q" value="{{ query }}" placeholder="Search medication by name" required><button class="btn">Find medication</button></form>
+ {% if query %}<div class="locations">
+ {% for m in medications %}<button type="button" class="locationcard map-choice" data-location="{{ m.location|upper }}" data-name="{{ m.name }}" data-batch="{{ m.batch_number }}"><b>{{ m.name }}</b><p>Batch: {{ m.batch_number }}</p><span class="shelf">{{ m.location }}</span><p>Quantity: {{ m.quantity }}</p><small>Show walking route</small></button>
+ {% empty %}<p>No medication found. Check its name in the inventory.</p>{% endfor %}</div>{% endif %}
+</section>
+<section class="panel"><div class="panelhead"><h2>Pharmacy floor plan</h2><span class="tag">Illustrative layout — customize to match your pharmacy</span></div>
+ <p id="route-status" role="status">Select a medication above, or click a shelf on the map to preview the route.</p>
+ <div class="map-scroller"><div id="pharmacy-map" class="pharmacy-map" role="group" aria-label="Pharmacy floor map"></div></div>
+ <div class="map-legend"><span>🟩 Counter</span><span>🟦 Walking route</span><span>🟨 Destination</span><span>⬜ Walkable floor</span></div>
+ <p class="subtitle">The blue route avoids shelves. Shelf positions and walking distances are illustrative, not measured. Change the layout in <code>static/core/finder.js</code> to match your actual pharmacy.</p>
+</section>
+{% load static %}<script src="{% static 'core/finder.js' %}" defer></script>
+{% endblock %}
