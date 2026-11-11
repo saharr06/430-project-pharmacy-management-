@@ -7,7 +7,7 @@ from .models import Medication
 
 class MedicationTests(TestCase):
     def setUp(self):
-        self.med = Medication.objects.create(name="Paracetamol", batch_number="B001", quantity=3, minimum_quantity=5, price=Decimal("2.50"), expiry_date=timezone.localdate() + timedelta(days=10), location="A1")
+        self.med = Medication.objects.create(name="Paracetamol", quantity=3, minimum_quantity=5, price=Decimal("2.50"), expiry_date=timezone.localdate() + timedelta(days=10), location="A1")
 
     def test_low_stock_at_threshold(self):
         self.assertTrue(self.med.is_low_stock)
@@ -29,12 +29,12 @@ class MedicationTests(TestCase):
         self.assertContains(response, "Paracetamol")
 
     def test_add_medication(self):
-        response = self.client.post(reverse("medication_add"), {"name": "Ibuprofen", "batch_number": "B002", "quantity": 12, "minimum_quantity": 4, "price": "3.75", "expiry_date": "2027-12-01", "location": "B2"})
+        response = self.client.post(reverse("medication_add"), {"name": "Ibuprofen", "quantity": 12, "minimum_quantity": 4, "price": "3.75", "expiry_date": "2027-12-01", "location": "B2"})
         self.assertRedirects(response, reverse("medication_list"))
         self.assertEqual(Medication.objects.count(), 2)
 
     def test_invalid_negative_quantity(self):
-        response = self.client.post(reverse("medication_add"), {"name": "Bad", "batch_number": "B003", "quantity": -1, "minimum_quantity": 4, "price": "3.75", "expiry_date": "2027-12-01", "location": "B2"})
+        response = self.client.post(reverse("medication_add"), {"name": "Bad", "quantity": -1, "minimum_quantity": 4, "price": "3.75", "expiry_date": "2027-12-01", "location": "B2"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Medication.objects.count(), 1)
 
