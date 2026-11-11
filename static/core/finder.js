@@ -21,6 +21,7 @@ const key=(r,c)=>r+','+c;
 const isFloor=(r,c)=>r>=0&&r<layout.length&&c>=0&&c<layout[0].length&&layout[r][c]==='.';
 const neighbors=(r,c)=>[[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
 function shortestPath(target){
+ if(!Object.hasOwn(shelves,target)) return null;
  const [sr,sc]=shelves[target];
  const goals=new Set(neighbors(sr,sc).filter(([r,c])=>isFloor(r,c)||key(r,c)===key(...start)).map(([r,c])=>key(r,c)));
  const queue=[start],previous=new Map([[key(...start),null]]);
@@ -59,7 +60,7 @@ function draw(target=null,name=''){
 }
 document.querySelectorAll('.map-choice').forEach(btn=>btn.addEventListener('click',()=>{
  const loc=btn.dataset.location.trim();
- if(!Object.hasOwn(shelves,loc)){status.textContent=`Location "${loc}" is not mapped yet. Use a shelf code A1–A8 or B1–B8, or update the floor plan.`;draw();status.textContent=`Location "${loc}" is not mapped yet. Use A1–A8 or B1–B8, or update the floor plan.`;return;}
+ if(!Object.hasOwn(shelves,loc)){draw();status.textContent=`Location "${loc}" is not mapped yet. Use A1–A8 or B1–B8, or update the floor plan.`;return;}
  draw(loc,btn.dataset.name);
  document.getElementById('pharmacy-map').scrollIntoView({behavior:'smooth',block:'center'});
 }));

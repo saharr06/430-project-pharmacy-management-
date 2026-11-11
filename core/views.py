@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from .forms import MedicationForm
 from .models import Medication
-from .services.search import search_medications
+from .services.stock import low_stock_medications
 
 
 def dashboard(request):
@@ -12,7 +12,7 @@ def dashboard(request):
     items = Medication.objects.all()
     return render(request, "core/dashboard.html", {
         "total": items.count(),
-        "low_count": sum(1 for m in items if m.is_low_stock),
+        "low_count": low_stock_medications().count(),
         "near_count": items.filter(expiry_date__range=(today, today + timedelta(days=14))).count(),
         "expired_count": items.filter(expiry_date__lt=today).count(),
         "recent": items.order_by("name")[:6],
@@ -75,7 +75,7 @@ def notifications(request):
     today = timezone.localdate()
     items = Medication.objects.all()
     return render(request, "core/notifications.html", {
-        "low": [m for m in items if m.is_low_stock],
+        "low": low_stock_medications().order_by("quantity", "name"),
         "near": items.filter(expiry_date__range=(today, today + timedelta(days=14))).order_by("expiry_date"),
         "expired": items.filter(expiry_date__lt=today).order_by("expiry_date"),
     })

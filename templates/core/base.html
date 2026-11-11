@@ -1,7 +1,7 @@
 {% load static %}<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pharmacy Manager</title><link rel="stylesheet" href="{% static 'core/style.css' %}"></head>
 <body><aside class="sidebar"><div class="logo">✚ MedCare<br></div><nav>
-<a href="{% url 'dashboard' %}">Dashboard</a><a href="{% url 'medication_list' %}">Medications</a><a href="{% url 'location_finder' %}">Location finder</a><a href="{% url 'notifications' %}">Notifications</a></nav><div class="foot"></aside>
+<a href="{% url 'dashboard' %}">Dashboard</a><a href="{% url 'medication_list' %}">Medications</a><a href="{% url 'location_finder' %}">Location finder</a><a href="{% url 'notifications' %}">Notifications{% if stock_alert_count %} <span class="tag" aria-label="{{ stock_alert_count }} low-stock medications">{{ stock_alert_count }}</span>{% endif %}</a></nav><div class="foot"></aside>
 <main><header><div><span class="eyebrow">PHARMACY MANAGEMENT</span><h1>{% block title %}{% endblock %}</h1></div></div></header>
 {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
 {% block content %}{% endblock %}</main></body></html>

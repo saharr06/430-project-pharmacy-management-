@@ -33,3 +33,11 @@ class MedicationForm(forms.ModelForm):
             )
 
         return price
+
+    def clean_location(self):
+        location = self.cleaned_data["location"].strip()
+        if not location:
+            raise forms.ValidationError("Enter a shelf location.")
+        if location.upper() in {f"{row}{n}" for row in "AB" for n in range(1, 9)}:
+            return location.upper()
+        return location
