@@ -30,4 +30,4 @@ class Medication(models.Model):
         return expiry.days_remaining(self)
 
     def __str__(self):
-        return f"{self.name} ({self.batch_number})"
+        return self.name
