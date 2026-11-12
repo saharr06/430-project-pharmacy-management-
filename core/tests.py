@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from .models import Medication
 
+
 class MedicationTests(TestCase):
     def setUp(self):
         self.med = Medication.objects.create(name="Paracetamol", quantity=3, minimum_quantity=5, price=Decimal("2.50"), expiry_date=timezone.localdate() + timedelta(days=10), location="A1")
@@ -29,12 +30,14 @@ class MedicationTests(TestCase):
         self.assertContains(response, "Paracetamol")
 
     def test_add_medication(self):
-        response = self.client.post(reverse("medication_add"), {"name": "Ibuprofen", "batch_number": "B002", "quantity": 12, "minimum_quantity": 4, "price": "3.75", "expiry_date": "2027-12-01", "location": "B2"})
+        next_year = timezone.localdate() + timedelta(days=365)
+        response = self.client.post(reverse("medication_add"), {"name": "Ibuprofen", "quantity": 12, "minimum_quantity": 4, "price": "3.75", "expiry_date": next_year.isoformat(), "location": "B2"})
         self.assertRedirects(response, reverse("medication_list"))
         self.assertEqual(Medication.objects.count(), 2)
 
     def test_invalid_negative_quantity(self):
-        response = self.client.post(reverse("medication_add"), {"name": "Bad", "batch_number": "B003", "quantity": -1, "minimum_quantity": 4, "price": "3.75", "expiry_date": "2027-12-01", "location": "B2"})
+        next_year = timezone.localdate() + timedelta(days=365)
+        response = self.client.post(reverse("medication_add"), {"name": "Bad", "quantity": -1, "minimum_quantity": 4, "price": "3.75", "expiry_date": next_year.isoformat(), "location": "B2"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Medication.objects.count(), 1)
 
@@ -51,6 +54,37 @@ class MedicationTests(TestCase):
         response = self.client.get(reverse("dashboard"))
         self.assertContains(response, "Low stock")
         self.assertEqual(response.context["low_count"], 1)
+
+    def test_cannot_add_expired_medication(self):
+        yesterday = timezone.localdate() - timedelta(days=1)
+        response = self.client.post(reverse("medication_add"), {"name": "Old", "quantity": 5, "minimum_quantity": 2, "price": "1.00", "expiry_date": yesterday.isoformat(), "location": "A2"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "already expired")
+        self.assertEqual(Medication.objects.count(), 1)
+
+    def test_can_add_medication_expiring_today(self):
+        today = timezone.localdate()
+        response = self.client.post(reverse("medication_add"), {"name": "Today", "quantity": 5, "minimum_quantity": 2, "price": "1.00", "expiry_date": today.isoformat(), "location": "A2"})
+        self.assertRedirects(response, reverse("medication_list"))
+        self.assertEqual(Medication.objects.count(), 2)
+
+    def test_can_edit_expired_medication_without_changing_date(self):
+        old_date = timezone.localdate() - timedelta(days=3)
+        self.med.expiry_date = old_date
+        self.med.save()
+        response = self.client.post(reverse("medication_edit", args=[self.med.pk]), {"name": "Paracetamol", "quantity": 0, "minimum_quantity": 5, "price": "2.50", "expiry_date": old_date.isoformat(), "location": "A1"})
+        self.assertRedirects(response, reverse("medication_list"))
+        self.med.refresh_from_db()
+        self.assertEqual(self.med.quantity, 0)
+
+    def test_cannot_edit_date_to_the_past(self):
+        yesterday = timezone.localdate() - timedelta(days=1)
+        response = self.client.post(reverse("medication_edit", args=[self.med.pk]), {"name": "Paracetamol", "quantity": 3, "minimum_quantity": 5, "price": "2.50", "expiry_date": yesterday.isoformat(), "location": "A1"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "already expired")
+        self.med.refresh_from_db()
+        self.assertNotEqual(self.med.expiry_date, yesterday)
+
 
 class AssignedFeatureTests(TestCase):
     def setUp(self):
