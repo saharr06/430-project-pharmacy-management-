@@ -4,6 +4,7 @@ from .models import Medication
 import re
 from django.core.exceptions import ValidationError
 
+
 class MedicationForm(forms.ModelForm):
     class Meta:
         model = Medication
@@ -33,18 +34,37 @@ class MedicationForm(forms.ModelForm):
     
     def clean_location(self):
         location = self.cleaned_data["location"].strip().upper()
-
         if not re.fullmatch(r"[AB][1-9][0-9]*", location):
-           raise ValidationError(
-               "Enter a valid location such as A1, A2, B1 or B15."
-             )
-
+            raise ValidationError("Location must be A or B followed by a positive number (e.g. A1 or B12).")
         return location
 
-    def clean_location(self):
-        location = self.cleaned_data["location"].strip()
-        if not location:
-            raise forms.ValidationError("Enter a shelf location.")
-        if location.upper() in {f"{row}{n}" for row in "AB" for n in range(1, 9)}:
-            return location.upper()
-        return location
+
+class StockEntryForm(forms.Form):
+    quantity = forms.IntegerField(
+        min_value=1,
+        label="New stock quantity"
+    )
+
+    expiry_date = forms.DateField(
+        widget=forms.DateInput(
+            attrs={"type": "date"}
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["expiry_date"].widget.attrs["min"] = (
+            timezone.localdate().isoformat()
+        )
+
+    def clean_expiry_date(self):
+        expiry_date = self.cleaned_data["expiry_date"]
+
+        if expiry_date < timezone.localdate():
+            raise forms.ValidationError(
+                "Cannot add expired stock. "
+                "Please select today or a future date."
+            )
+
+        return expiry_date

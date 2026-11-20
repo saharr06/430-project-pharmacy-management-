@@ -1,0 +1,4 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ medication.name }} — Stock History{% endblock %}
+{% block content %}<section class="panel"><p>Current total quantity: <strong>{{ medication.quantity }}</strong> · Location: {{ medication.location }}</p><p><a class="btn" href="{% url 'medication_add_stock' medication.pk %}">+ Add New Stock</a> <a class="btn secondary" href="{% url 'medication_list' %}">Back to medications</a></p>
+<h2>Latest 3 stock entries</h2><div class="tablewrap"><table><thead><tr><th>Quantity</th><th>Expiry date</th><th>Received</th></tr></thead><tbody>{% for entry in recent_entries %}<tr><td>{{ entry.quantity }}</td><td>{{ entry.expiry_date }}</td><td>{{ entry.received_at }}</td></tr>{% empty %}<tr><td colspan="3">No recorded stock entries.</td></tr>{% endfor %}</tbody></table></div><p class="subtitle">Older entries are retained in the database.</p></section>{% endblock %}
