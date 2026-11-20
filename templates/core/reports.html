@@ -1,0 +1,5 @@
+{% extends 'core/base.html' %}
+{% block title %}Pharmacy Reports{% endblock %}
+{% block content %}
+<section class="panel"><div class="panelhead"><h2>Low stock</h2><a class="btn" href="?format=csv">Export CSV</a></div><table><tr><th>Medication</th><th>Quantity</th><th>Minimum</th><th>Location</th></tr>{% for m in low %}<tr><td>{{ m.name }}</td><td>{{ m.quantity }}</td><td>{{ m.minimum_quantity }}</td><td>{{ m.location }}</td></tr>{% empty %}<tr><td colspan="4">No low stock.</td></tr>{% endfor %}</table></section><section class="panel"><h2>Expired / expiring within {{ days }} days</h2><table><tr><th>Medication</th><th>Quantity</th><th>Expiry</th><th>Location</th></tr>{% for e in expiring %}<tr><td>{{ e.medication.name }}</td><td>{{ e.quantity }}</td><td>{{ e.expiry_date }}</td><td>{{ e.medication.location }}</td></tr>{% empty %}<tr><td colspan="4">No expiry warnings.</td></tr>{% endfor %}</table></section><button class="btn secondary" onclick="window.print()">Print report</button>
+{% endblock %}

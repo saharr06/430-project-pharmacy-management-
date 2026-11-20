@@ -1,0 +1,5 @@
+{% extends 'core/base.html' %}
+{% block title %}Patient Records{% endblock %}
+{% block content %}
+<section class="panel"><div class="panelhead"><h2>Patients</h2><a class="btn" href="{% url 'patient_add' %}">+ Add patient</a></div><form class="search" method="get"><input name="q" value="{{ query }}" placeholder="Search name, phone or ID"><button class="btn">Search</button></form><div class="tablewrap"><table><tr><th>ID</th><th>Name</th><th>Phone</th><th>Birth date</th><th>Details</th></tr>{% for patient in patients %}<tr><td>{{ patient.pk }}</td><td>{{ patient.full_name }}</td><td>{{ patient.phone }}</td><td>{{ patient.date_of_birth }}</td><td><a href="{% url 'patient_detail' patient.pk %}">View</a></td></tr>{% empty %}<tr><td colspan="5">No patients found.</td></tr>{% endfor %}</table></div></section>
+{% endblock %}

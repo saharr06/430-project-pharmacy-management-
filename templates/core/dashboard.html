@@ -7,6 +7,10 @@
   <a class="feature-card" href="{% url 'medication_add' %}"><span class="feature-icon">➕</span><h2>Add Medication</h2><p>Record a medication, its quantity, price, expiry date, and shelf location.</p></a>
   <a class="feature-card" href="{% url 'notifications' %}"><span class="feature-icon">🔔</span><h2>Reminders</h2><p>Check low-stock, nearly expired, and expired medications.</p></a>
   <a class="feature-card" href="{% url 'location_finder' %}"><span class="feature-icon">📍</span><h2>Location Finder</h2><p>Find where a medication is stored in the pharmacy.</p></a>
+  <a class="feature-card" href="{% url 'patients' %}"><span class="feature-icon">👥</span><h2>Patient Records</h2><p>Manage patient profiles, allergies, and prescription histories.</p></a>
+  <a class="feature-card" href="{% url 'sales' %}"><span class="feature-icon">🛒</span><h2>Sales &amp; Prescriptions</h2><p>Dispense unexpired stock and record patient purchases.</p></a>
+  <a class="feature-card" href="{% url 'queue_page' %}"><span class="feature-icon">🎟️</span><h2>Pharmacy Queue</h2><p>Take a ticket, call the next customer, and display the number.</p></a>
+  <a class="feature-card" href="{% url 'reports' %}"><span class="feature-icon">📊</span><h2>Reports</h2><p>Review low stock and expiry alerts, and export a report.</p></a>
 </div>
 <style>
 .feature-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:40px;margin-top:40px}

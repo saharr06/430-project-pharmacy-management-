@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import Medication
+from .models import Medication, Patient, Allergy, PharmacySetting
 import re
 from django.core.exceptions import ValidationError
 
@@ -68,3 +68,27 @@ class StockEntryForm(forms.Form):
             )
 
         return expiry_date
+
+class PatientForm(forms.ModelForm):
+    class Meta:
+        model = Patient
+        fields = ["full_name", "phone", "date_of_birth"]
+        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"})}
+
+    def clean_date_of_birth(self):
+        value = self.cleaned_data["date_of_birth"]
+        if value > timezone.localdate():
+            raise forms.ValidationError("Date of birth cannot be in the future.")
+        return value
+
+
+class AllergyForm(forms.ModelForm):
+    class Meta:
+        model = Allergy
+        fields = ["substance", "reaction", "severity"]
+
+
+class SettingForm(forms.ModelForm):
+    class Meta:
+        model = PharmacySetting
+        fields = ["expiry_warning_days"]

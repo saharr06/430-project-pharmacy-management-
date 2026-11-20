@@ -1,0 +1,5 @@
+{% extends 'core/base.html' %}
+{% block title %}Sale #{{ sale.pk }}{% endblock %}
+{% block content %}
+<section class="panel"><p>Patient: {{ sale.patient|default:'Walk-in' }} · Pharmacist: {{ sale.pharmacist }} · Date: {{ sale.created_at }}</p><h2>Dispensed medications</h2><table><tr><th>Medication</th><th>Quantity</th><th>Expiry</th><th>Unit price</th><th>Line total</th></tr>{% for line in sale.lines.all %}<tr><td>{{ line.medication.name }}</td><td>{{ line.quantity }}</td><td>{{ line.expiry_date }}</td><td>{{ line.unit_price }}</td><td>{{ line.line_total }}</td></tr>{% endfor %}</table><h2>Total: {{ sale.total }}</h2><a class="btn secondary" href="{% url 'sales' %}">Back to sales</a></section>
+{% endblock %}

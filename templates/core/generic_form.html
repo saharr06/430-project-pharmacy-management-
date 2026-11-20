@@ -1,0 +1,5 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<section class="panel formpanel"><form method="post">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}<div class="error">{{ field.errors }}</div></div>{% endfor %}<button class="btn" type="submit">Save</button> <a class="btn secondary" href="{% url back_url %}">Back</a></form></section>
+{% endblock %}

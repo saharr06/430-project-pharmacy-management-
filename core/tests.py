@@ -143,3 +143,41 @@ class AssignedFeatureTests(TestCase):
         response = self.client.get(reverse("location_finder"), {"q": "script"})
         self.assertNotContains(response, self.med.name)
         self.assertContains(response, '&lt;script&gt;')
+
+class ExpandedFeaturesTests(TestCase):
+    def setUp(self):
+        from .models import Patient, StockEntry
+        self.patient = Patient.objects.create(full_name="Demo Patient", phone="12345", date_of_birth="2000-01-01")
+        self.med = Medication.objects.create(name="Demo Medicine", quantity=8, minimum_quantity=2,
+            price="5.00", expiry_date=timezone.localdate() + timedelta(days=60), location="A2")
+        StockEntry.objects.create(medication=self.med, quantity=8, expiry_date=self.med.expiry_date)
+
+    def test_patient_details(self):
+        self.assertContains(self.client.get(reverse("patient_detail", args=[self.patient.pk])), "Demo Patient")
+
+    def test_sale_reduces_stock(self):
+        from .models import Sale
+        response = self.client.post(reverse("sale_create"), {"patient": self.patient.pk,
+            "medication": self.med.pk, "quantity": 3, "pharmacist": "Demo"})
+        self.assertEqual(response.status_code, 302)
+        self.med.refresh_from_db()
+        self.assertEqual(self.med.quantity, 5)
+        self.assertEqual(Sale.objects.count(), 1)
+
+    def test_sale_rejects_excess_quantity(self):
+        response = self.client.post(reverse("sale_create"), {"medication": self.med.pk,
+            "quantity": 999, "pharmacist": "Demo"})
+        self.assertEqual(response.status_code, 200)
+        self.med.refresh_from_db()
+        self.assertEqual(self.med.quantity, 8)
+
+    def test_queue_ticket(self):
+        from .models import QueueTicket
+        self.client.post(reverse("queue_take"))
+        self.client.post(reverse("queue_next"))
+        self.assertEqual(QueueTicket.objects.get(number=1).status, "called")
+
+    def test_reports_export(self):
+        response = self.client.get(reverse("reports"), {"format": "csv"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/csv", response["Content-Type"])

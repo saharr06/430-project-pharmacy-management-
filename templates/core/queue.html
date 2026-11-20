@@ -1,0 +1,5 @@
+{% extends 'core/base.html' %}
+{% block title %}Pharmacy Queue{% endblock %}
+{% block content %}
+<section class="panel"><h2>Currently serving: {% if current %}#{{ current.number }}{% else %}—{% endif %}</h2><form method="post" action="{% url 'queue_take' %}" style="display:inline">{% csrf_token %}<button class="btn">Get customer ticket</button></form><form method="post" action="{% url 'queue_next' %}" style="display:inline">{% csrf_token %}<button class="btn">Call next</button></form><form method="post" action="{% url 'queue_skip' %}" style="display:inline">{% csrf_token %}<button class="btn secondary">Skip current</button></form> <a class="btn secondary" href="{% url 'queue_display' %}" target="_blank">Waiting room screen</a></section><section class="panel"><h2>Recent tickets</h2><table><tr><th>Number</th><th>Status</th><th>Issued</th></tr>{% for t in tickets %}<tr><td>#{{ t.number }}</td><td>{{ t.get_status_display }}</td><td>{{ t.created_at }}</td></tr>{% endfor %}</table></section>
+{% endblock %}
