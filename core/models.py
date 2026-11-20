@@ -1,6 +1,7 @@
 from django.db import models
 from .services import stock, expiry
 
+
 class Medication(models.Model):
     name = models.CharField(max_length=120)
     quantity = models.PositiveIntegerField(default=0)
@@ -31,3 +32,16 @@ class Medication(models.Model):
 
     def __str__(self):
         return self.name
+
+class StockEntry(models.Model):
+    medication = models.ForeignKey(
+        "Medication",
+        on_delete=models.CASCADE,
+        related_name="stock_entries"
+    )
+    quantity = models.PositiveIntegerField()
+    expiry_date = models.DateField()
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["expiry_date", "id"]

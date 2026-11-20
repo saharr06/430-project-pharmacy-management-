@@ -85,3 +85,14 @@ def location_finder(request):
     query = request.GET.get("q", "").strip()
     items = Medication.objects.filter(name__icontains=query) if query else Medication.objects.none()
     return render(request, "core/location_finder.html", {"medications": items, "query": query})
+def medication_detail(request, pk):
+    medication = get_object_or_404(Medication, pk=pk)
+
+    recent_entries = medication.stock_entries.order_by(
+        "-received_at", "-id"
+    )[:3]
+
+    return render(request, "core/medication_detail.html", {
+        "medication": medication,
+        "recent_entries": recent_entries,
+    })

@@ -1,7 +1,8 @@
 from django import forms
 from django.utils import timezone
 from .models import Medication
-
+import re
+from django.core.exceptions import ValidationError
 
 class MedicationForm(forms.ModelForm):
     class Meta:
@@ -29,6 +30,16 @@ class MedicationForm(forms.ModelForm):
         if expiry_date < timezone.localdate() and not unchanged:
             raise forms.ValidationError("This medication has already expired. Choose today or a future expiry date.")
         return expiry_date
+    
+    def clean_location(self):
+        location = self.cleaned_data["location"].strip().upper()
+
+        if not re.fullmatch(r"[AB][1-9][0-9]*", location):
+           raise ValidationError(
+               "Enter a valid location such as A1, A2, B1 or B15."
+             )
+
+        return location
 
     def clean_location(self):
         location = self.cleaned_data["location"].strip()
