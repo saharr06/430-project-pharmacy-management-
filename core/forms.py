@@ -6,23 +6,9 @@ from .models import Medication
 class MedicationForm(forms.ModelForm):
     class Meta:
         model = Medication
-        fields = [
-            "name",
-            "quantity",
-            "minimum_quantity",
-            "price",
-            "expiry_date",
-            "location",
-        ]
-        widgets = {
-            "expiry_date": forms.DateInput(
-                attrs={"type": "date"}
-            )
-
-        }
-        help_texts = {
-            "location": "Example: A2",
-        }
+        fields = ["name", "quantity", "minimum_quantity", "price", "expiry_date", "location"]
+        widgets = {"expiry_date": forms.DateInput(attrs={"type": "date"})}
+        help_texts = {"location": "Example: A2"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -31,12 +17,8 @@ class MedicationForm(forms.ModelForm):
 
     def clean_price(self):
         price = self.cleaned_data["price"]
-
         if price < 0:
-            raise forms.ValidationError(
-                "Price cannot be negative."
-            )
-
+            raise forms.ValidationError("Price cannot be negative.")
         return price
 
     def clean_expiry_date(self):
@@ -45,9 +27,7 @@ class MedicationForm(forms.ModelForm):
             return expiry_date
         unchanged = self.instance.pk and expiry_date == self.instance.expiry_date
         if expiry_date < timezone.localdate() and not unchanged:
-            raise forms.ValidationError(
-                "This medication is already expired. Enter today's date or a later one."
-            )
+            raise forms.ValidationError("This medication has already expired. Choose today or a future expiry date.")
         return expiry_date
 
     def clean_location(self):
