@@ -6,8 +6,9 @@ from django.utils import timezone
 from .forms import MedicationForm, StockEntryForm, PatientForm, AllergyForm, SettingForm
 from .models import Medication, StockEntry, Patient, Allergy, Sale, SaleLine, QueueTicket, PharmacySetting
 from .services.stock import low_stock_medications
+from .permissions import role_required
 
-
+@role_required("Manager", "Pharmacist", "Receptionist")
 def dashboard(request):
     today = timezone.localdate()
     items = Medication.objects.all()
@@ -19,7 +20,7 @@ def dashboard(request):
         "recent": items.order_by("name")[:6],
     })
 
-
+@role_required("Manager", "Pharmacist")
 def medication_list(request):
     query = request.GET.get("q", "").strip()
 
@@ -43,7 +44,7 @@ def medication_list(request):
         }
     )
 
-
+@role_required("Manager")
 def medication_create(request):
     form = MedicationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -55,7 +56,7 @@ def medication_create(request):
         return redirect("medication_list")
     return render(request, "core/medication_form.html", {"form": form, "heading": "Add medication"})
 
-
+@role_required("Manager")
 def medication_edit(request, pk):
     medication = get_object_or_404(Medication, pk=pk)
     form = MedicationForm(request.POST or None, instance=medication)
@@ -91,7 +92,7 @@ def medication_edit(request, pk):
         return redirect("medication_list")
     return render(request, "core/medication_form.html", {"form": form, "heading": "Edit medication"})
 
-
+@role_required("Manager")
 def medication_delete(request, pk):
     medication = get_object_or_404(Medication, pk=pk)
     if request.method == "POST":
@@ -100,7 +101,7 @@ def medication_delete(request, pk):
         return redirect("medication_list")
     return render(request, "core/medication_confirm_delete.html", {"medication": medication})
 
-
+@role_required("Manager", "Pharmacist")
 def notifications(request):
     today = timezone.localdate()
     warning_days = PharmacySetting.current().expiry_warning_days
@@ -114,11 +115,12 @@ def notifications(request):
         "expired_legacy": items.filter(stock_entries__isnull=True, expiry_date__lt=today).distinct(),
     })
 
-
+@role_required("Manager", "Pharmacist")
 def location_finder(request):
     query = request.GET.get("q", "").strip()
     items = Medication.objects.filter(name__icontains=query) if query else Medication.objects.none()
     return render(request, "core/location_finder.html", {"medications": items, "query": query})
+@role_required("Manager", "Pharmacist")
 def medication_add_stock(request, pk):
     medication = get_object_or_404(Medication, pk=pk)
     form = StockEntryForm(request.POST or None)
@@ -137,7 +139,7 @@ def medication_add_stock(request, pk):
         messages.success(request, "New stock received successfully.")
         return redirect("medication_detail", pk=pk)
     return render(request, "core/add_stock.html", {"medication": medication, "form": form})
-
+@role_required("Manager", "Pharmacist")
 def medication_detail(request, pk):
     medication = get_object_or_404(Medication, pk=pk)
 
@@ -159,7 +161,7 @@ from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-
+@role_required("Manager", "Pharmacist", "Receptionist")
 def patients(request):
     query = request.GET.get("q", "").strip()
     items = Patient.objects.all().order_by("full_name")
@@ -170,7 +172,7 @@ def patients(request):
         items = items.filter(criteria)
     return render(request, "core/patients.html", {"patients": items, "query": query})
 
-
+@role_required("Manager", "Pharmacist")
 def patient_edit(request, pk=None):
     patient = get_object_or_404(Patient, pk=pk) if pk else None
     form = PatientForm(request.POST or None, instance=patient)
@@ -180,12 +182,12 @@ def patient_edit(request, pk=None):
         return redirect("patient_detail", pk=patient.pk)
     return render(request, "core/generic_form.html", {"form": form, "heading": "Edit patient" if patient else "Add patient", "back_url": "patients"})
 
-
+@role_required("Manager", "Pharmacist", "Receptionist")
 def patient_detail(request, pk):
     patient = get_object_or_404(Patient, pk=pk)
     return render(request, "core/patient_detail.html", {"patient": patient, "allergies": patient.allergies.all(), "sales": patient.sales.prefetch_related("lines__medication")})
 
-
+@role_required("Manager", "Pharmacist")
 def allergy_edit(request, patient_pk, pk=None):
     patient = get_object_or_404(Patient, pk=patient_pk)
     allergy = get_object_or_404(Allergy, pk=pk, patient=patient) if pk else None
@@ -200,16 +202,17 @@ def allergy_edit(request, patient_pk, pk=None):
 
 
 @require_POST
+@role_required("Manager", "Pharmacist")
 def allergy_delete(request, patient_pk, pk):
     allergy = get_object_or_404(Allergy, pk=pk, patient_id=patient_pk)
     allergy.delete()
     return redirect("patient_detail", pk=patient_pk)
 
-
+@role_required("Manager", "Pharmacist")
 def sale_list(request):
     return render(request, "core/sales.html", {"sales": Sale.objects.select_related("patient").all()[:100]})
 
-
+@role_required("Manager", "Pharmacist")
 def sale_create(request):
     patients_list = Patient.objects.order_by("full_name")
     meds = Medication.objects.order_by("name")
@@ -266,16 +269,16 @@ def sale_create(request):
             messages.error(request, str(exc))
     return render(request, "core/sale_form.html", {"patients": patients_list, "medications": meds})
 
-
+@role_required("Manager", "Pharmacist")
 def sale_detail(request, pk):
     sale = get_object_or_404(Sale.objects.select_related("patient").prefetch_related("lines__medication"), pk=pk)
     return render(request, "core/sale_detail.html", {"sale": sale})
 
-
+@role_required("Manager", "Pharmacist", "Receptionist")
 def queue_page(request):
     return render(request, "core/queue.html", {"tickets": QueueTicket.objects.order_by("-number")[:40], "current": QueueTicket.objects.filter(status="called").order_by("-number").first()})
 
-
+@role_required("Manager", "Pharmacist", "Receptionist")
 @require_POST
 def queue_take(request):
     with transaction.atomic():
@@ -285,7 +288,7 @@ def queue_take(request):
     messages.success(request, f"Your queue number is {ticket.number}.")
     return redirect("queue_page")
 
-
+@role_required("Manager", "Pharmacist")
 @require_POST
 def queue_next(request):
     with transaction.atomic():
@@ -298,16 +301,17 @@ def queue_next(request):
 
 
 @require_POST
+@role_required("Manager", "Pharmacist")
 def queue_skip(request):
     QueueTicket.objects.filter(status="called").update(status="skipped")
     return redirect("queue_page")
 
-
+@role_required("Manager", "Pharmacist", "Receptionist")
 def queue_display(request):
     current = QueueTicket.objects.filter(status="called").order_by("-number").first()
     return render(request, "core/queue_display.html", {"current": current})
 
-
+@role_required("Manager", "Pharmacist")
 def reports(request):
     from django.db.models import F
     from django.http import HttpResponse
@@ -328,7 +332,7 @@ def reports(request):
         return response
     return render(request, "core/reports.html", {"low": low, "expiring": expiring, "today": today, "days": days})
 
-
+@role_required("Manager")
 def settings_page(request):
     obj = PharmacySetting.current()
     form = SettingForm(request.POST or None, instance=obj)

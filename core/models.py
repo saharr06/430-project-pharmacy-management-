@@ -7,7 +7,7 @@ class Medication(models.Model):
     quantity = models.PositiveIntegerField(default=0)
     minimum_quantity = models.PositiveIntegerField(default=5)
     price = models.DecimalField(max_digits=9, decimal_places=2)
-    expiry_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField()
     location = models.CharField(max_length=80, help_text="Example: A1 / Shelf 2")
     
 

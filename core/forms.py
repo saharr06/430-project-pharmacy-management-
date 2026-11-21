@@ -14,6 +14,7 @@ class MedicationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["expiry_date"].required = True
         if not self.instance.pk:
             self.fields["expiry_date"].widget.attrs["min"] = timezone.localdate().isoformat()
 
@@ -24,13 +25,19 @@ class MedicationForm(forms.ModelForm):
         return price
 
     def clean_expiry_date(self):
-        expiry_date = self.cleaned_data.get("expiry_date")
-        if expiry_date is None:
-            return expiry_date
-        unchanged = self.instance.pk and expiry_date == self.instance.expiry_date
-        if expiry_date < timezone.localdate() and not unchanged:
-            raise forms.ValidationError("This medication has already expired. Choose today or a future expiry date.")
-        return expiry_date
+      expiry_date = self.cleaned_data.get("expiry_date")
+
+      if expiry_date is None:
+          raise forms.ValidationError(
+            "Expiry date is required."
+          )
+
+      if expiry_date < timezone.localdate():
+          raise forms.ValidationError(
+            "Expiry date cannot be in the past."
+          )
+
+      return expiry_date
     
     def clean_location(self):
         location = self.cleaned_data["location"].strip().upper()
@@ -73,13 +80,27 @@ class PatientForm(forms.ModelForm):
     class Meta:
         model = Patient
         fields = ["full_name", "phone", "date_of_birth"]
-        widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"})}
+        widgets = {
+            "date_of_birth": forms.DateInput(
+                attrs={"type": "date"}
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["date_of_birth"].widget.attrs["max"] = (
+            timezone.localdate().isoformat()
+        )
 
     def clean_date_of_birth(self):
-        value = self.cleaned_data["date_of_birth"]
-        if value > timezone.localdate():
-            raise forms.ValidationError("Date of birth cannot be in the future.")
-        return value
+        dob = self.cleaned_data["date_of_birth"]
+
+        if dob > timezone.localdate():
+            raise forms.ValidationError(
+                "Date of birth cannot be in the future."
+            )
+
+        return dob
 
 
 class AllergyForm(forms.ModelForm):
