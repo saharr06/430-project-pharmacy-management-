@@ -1,9 +1,20 @@
 {% load static %}<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pharmacy Manager</title><link rel="stylesheet" href="{% static 'core/style.css' %}"></head>
 <body><aside class="sidebar"><div class="logo">✚ MedCare<br></div><nav>
-<a href="{% url 'dashboard' %}">Dashboard</a><a href="{% url 'medication_list' %}">Medications</a><a href="{% url 'location_finder' %}">Location finder</a><a href="{% url 'notifications' %}">Reminders{% if stock_alert_count %} <span class="tag" aria-label="{{ stock_alert_count }} low-stock medications">{{ stock_alert_count }}</span>{% endif %}</a><a href="{% url 'patients' %}">Patients</a><a href="{% url 'sales' %}">Sales &amp; Prescriptions</a><a href="{% url 'queue_page' %}">Queue</a><a href="{% url 'reports' %}">Reports</a><a href="{% url 'settings_page' %}">Settings</a></nav><div class="foot">{% if user.is_authenticated %}
+{% if role %}
+<a href="{% url 'dashboard' %}">Dashboard</a>
+{% if role == "Manager" or role == "Pharmacist" %}<a href="{% url 'medication_list' %}">Medications</a>
+<a href="{% url 'location_finder' %}">Location finder</a>
+<a href="{% url 'notifications' %}">Reminders{% if stock_alert_count %} <span class="tag" aria-label="{{ stock_alert_count }} low-stock medications">{{ stock_alert_count }}</span>{% endif %}</a>{% endif %}
+<a href="{% url 'patients' %}">Patients</a>
+{% if role == "Manager" or role == "Pharmacist" %}<a href="{% url 'sales' %}">Sales &amp; Prescriptions</a>{% endif %}
+<a href="{% url 'queue_page' %}">Queue</a>
+{% if role == "Manager" or role == "Pharmacist" %}<a href="{% url 'reports' %}">Reports</a>{% endif %}
+{% if role == "Manager" %}<a href="{% url 'settings_page' %}">Settings</a>{% endif %}
+{% endif %}
+</nav>{% if user.is_authenticated %}
     <div class="foot">
-        Logged in as: {{ user.username }}
+        Logged in as: {{ user.username }}{% if role %} ({{ role }}){% else %} (no role){% endif %}
 
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
@@ -13,6 +24,6 @@
         </form>
     </div>
 {% endif %}</aside>
-<main><header><div><span class="eyebrow">PHARMACY MANAGEMENT</span><h1>{% block title %}{% endblock %}</h1></div></div></header>
+<main><header><div><span class="eyebrow">PHARMACY MANAGEMENT</span><h1>{% block title %}{% endblock %}</h1></div></header>
 {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
 {% block content %}{% endblock %}</main></body></html>
